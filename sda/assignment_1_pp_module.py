@@ -47,7 +47,7 @@ def doParallelProcessing (processId, num_process, l1 = []):
              comm.send(data2, dest=i, tag=1)
 
         #If size of the process to number of element doesn't match
-        #Then process here and send it to process 1
+        #Then process here at Master
         if num_ele_mismatch_with_num_process != 0:
             #print("NUM ELE MISMATCH ",num_ele_mismatch_with_num_process)
             #comm.send(num_ele_mismatch_with_num_process,dest=1,tag=1)
@@ -73,7 +73,7 @@ def doParallelProcessing (processId, num_process, l1 = []):
             step+=1
             print("step ",step," : Received partial sum ",tmp , "from slave process to  ",processId)
             sum += tmp
-        print("Final sum is: ", sum, "\n")
+        return sum
     else:
         # Slave Processes
         n_elements_received = comm.recv(source=0,tag=1)
@@ -91,12 +91,9 @@ def doParallelProcessing (processId, num_process, l1 = []):
 
 
 
-if __name__ == "__main__":
+def init(l1 = []):
    processID = comm.Get_rank()
    num_process = comm.Get_size()
-   '''
-   This list is for testing
-   '''
-   l1 = [1,2,3,4,5,6,7,8,9,10]
    #Here we have to feed list for parallel processing
-   doParallelProcessing(processID, num_process, l1)
+   sum = doParallelProcessing(processID, num_process, l1)
+   return sum
