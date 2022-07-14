@@ -1,0 +1,6 @@
+
+#Clang
+ mpicc -o <objectFile> fileName.c
+ mpirun -np 4 ./objectFile
+#Python
+mpiexec -n 4 python3 fileName.py
