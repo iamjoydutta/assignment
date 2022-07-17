@@ -9,6 +9,7 @@ The main program would return the total sum value
 from mpi4py import MPI
 import numpy as np
 import pandas as pd
+import time
 
 comm = MPI.COMM_WORLD
 processId = comm.Get_rank()
@@ -19,7 +20,7 @@ units_sold_per_region = {}
 profit_per_region = {}
 
 
-def calculate_sum_parallel(l1=[], calculated_sum=0):
+def calculate_sum_parallel(l1=[]):
 	calculated_sum = 0
 	global step
 	num_ele_mismatch_with_num_process = 0
@@ -75,18 +76,19 @@ def calculate_sum_parallel(l1=[], calculated_sum=0):
 
 
 if processId == 0:
+	master_start_time = time.time()
 	data = pd.read_csv("../geosales.csv")
 	total_transactions = len(data.index)
 	# Partition data based on region
 	partitioned_data = data.groupby('region')
 	for data in partitioned_data:
-		units_sold_per_region[data[0]] = calculate_sum_parallel(data[1]['units_sold'].to_list(), 0)
-		profit_per_region[data[0]] = calculate_sum_parallel(data[1]['total_profit'].to_list(), 0)
+		units_sold_per_region[data[0]] = calculate_sum_parallel(data[1]['units_sold'].to_list())
+		profit_per_region[data[0]] = calculate_sum_parallel(data[1]['total_profit'].to_list())
 		print("Completed processing region : ", data[0], " units_sold : ", units_sold_per_region,
 			  " total_profits_per_region : ", profit_per_region)
 	print(units_sold_per_region)
 	print(profit_per_region)
-	total_profit = calculate_sum_parallel(list(profit_per_region.values()), 0)
+	total_profit = calculate_sum_parallel(list(profit_per_region.values()))
 	print("Total Profit is : ", total_profit)
 	print("Average profit per transaction is : ", (total_profit / total_transactions))
 	# signal to slaves to terminate
@@ -96,14 +98,19 @@ if processId == 0:
 		comm.send(0, dest=j, tag=1)
 		resp = comm.recv(source=MPI.ANY_SOURCE, tag=1)
 		# print("Response ", resp)
+	master_end_time = time.time()
+	print("Time taken by master process : ", master_end_time - master_start_time)
 	# print("Done with master")
 else:
 	# Slave Processes
+	slave_start_time = time.time()
 	while True:
 		# print("Slave ", processId, " waiting for data")
 		n_elements_received = comm.recv(source=0, tag=1)
 		if n_elements_received == 0:
 			# print("Slave ", processId, " Exiting")
+			slave_end_time = time.time()
+			print("Time taken by Slave process", processId, "  : ", slave_end_time - slave_start_time)
 			comm.send("done", dest=0, tag=1)
 			break
 		# print("Slave received number of elements, ", n_elements_received, " process ", processId)
