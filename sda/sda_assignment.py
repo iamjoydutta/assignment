@@ -1,9 +1,12 @@
 """
-This code computes sum.
-This program takes input as an array with size n.
-It feeds into each processor and each processor
-individually computes sum and return the value.
-The main program would return the total sum value
+This is parallell programming processing, solving
+as per the assignment problem to find :
+   a. total_units per region
+   b. average of total_profit for whole dataset.
+AUTHOR : 
+  i. JOY DUTTA
+ ii. AKHIL KANAKKILLAM
+iii. VARSHA HIREGOUDAR 
 """
 
 from mpi4py import MPI
